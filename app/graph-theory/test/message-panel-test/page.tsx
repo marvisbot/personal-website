@@ -48,7 +48,7 @@ export default function TestPage() {
 
   return (
     <div className="max-w-4xl mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6">Message Panel Test</h1>
+      <h1 className="text-2xl font-bold mb-6 text-gray-800">Message Panel Test</h1>
       
       <div className="space-y-8">
         {/* Existing messages */}
