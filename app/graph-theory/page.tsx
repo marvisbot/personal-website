@@ -1,13 +1,43 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ProblemInput } from '@/components/graph-theory/ProblemInput';
+import { MessagePanel } from '@/components/graph-theory/MessagePanel';
 import { Session, CreateSessionRequest } from '@/types/graph-theory';
 
 export default function GraphTheoryPage() {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Cleanup effect for SSE connection
+  useEffect(() => {
+    let eventSource: EventSource | null = null;
+
+    if (session?.id && session.status === 'in-progress') {
+      eventSource = new EventSource(`/api/graph-theory/session/${session.id}`);
+      
+      eventSource.onmessage = (event) => {
+        const message = JSON.parse(event.data);
+        setSession(prev => prev ? {
+          ...prev,
+          messages: [...prev.messages, message]
+        } : null);
+      };
+
+      eventSource.onerror = () => {
+        if (eventSource) {
+          eventSource.close();
+        }
+      };
+    }
+
+    return () => {
+      if (eventSource) {
+        eventSource.close();
+      }
+    };
+  }, [session?.id, session?.status]);
 
   const handleCreateSession = async (request: CreateSessionRequest) => {
     setIsLoading(true);
@@ -58,22 +88,46 @@ export default function GraphTheoryPage() {
         What do you want to prove today?
       </h1>
 
-      {!session && (
-        <ProblemInput onSubmit={handleCreateSession} isLoading={isLoading} />
+     {!session && (
+        <div className="mb-8">
+          <ProblemInput onSubmit={handleCreateSession} isLoading={isLoading} />
+        </div>
       )}
 
       {error && (
-        <div className="mt-4 p-4 bg-red-100 text-red-700 rounded-md">
+        <div className="mb-8 p-4 bg-red-100 text-red-700 rounded-md">
           {error}
         </div>
       )}
 
       {session && (
-        <div className="mt-8">
-          {/* We'll add MessagePanel component here later */}
-          <pre className="bg-gray-100 p-4 rounded-md">
-            {JSON.stringify(session, null, 2)}
-          </pre>
+        <div className="space-y-4">
+          {/* Show the original problem */}
+          <div className="bg-white p-4 rounded-lg shadow mb-6">
+            <h2 className="font-semibold text-gray-700 mb-2">Problem</h2>
+            <p className="text-gray-600">{session.problem}</p>
+          </div>
+
+          {/* Message thread */}
+          <div className="space-y-4">
+            {session.messages.map((message, index) => (
+              <MessagePanel 
+                key={`${message.timestamp}-${index}`}
+                message={message}
+              />
+            ))}
+          </div>
+
+          {/* Loading indicator for new messages */}
+          {session.status === 'in-progress' && (
+            <div className="flex justify-center py-4">
+              <div className="animate-pulse flex space-x-4">
+                <div className="h-2 w-2 bg-gray-400 rounded-full"></div>
+                <div className="h-2 w-2 bg-gray-400 rounded-full"></div>
+                <div className="h-2 w-2 bg-gray-400 rounded-full"></div>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </main>
