@@ -2,8 +2,9 @@
 'use client';
 
 import { MessagePanel } from '@/components/graph-theory/MessagePanel';
-import { Message } from '@/types/graph-theory';
+import { Message, Feedback } from '@/types/graph-theory';
 import { useState, useEffect } from 'react';
+import { FeedbackForm } from '@/components/graph-theory/FeedbackForm';
 
 const baseMessages: Omit<Message, 'timestamp'>[] = [
   {
@@ -30,6 +31,11 @@ const baseMessages: Omit<Message, 'timestamp'>[] = [
 
 export default function TestPage() {
   const [messages, setMessages] = useState<Message[]>([]);
+  
+  const handleFeedbackSubmit = (feedback: Feedback) => {
+    console.log('Feedback submitted:', feedback);
+    // In real app, this would update the session status and save to backend
+  };
 
   useEffect(() => {
     // Add timestamps on the client side
@@ -42,14 +48,26 @@ export default function TestPage() {
 
   return (
     <div className="max-w-4xl mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6 text-black">Message Panel Test</h1>
-      <div className="space-y-4">
-        {messages.map((message, index) => (
-          <MessagePanel 
-            key={`${message.timestamp}-${index}`}
-            message={message}
+      <h1 className="text-2xl font-bold mb-6">Message Panel Test</h1>
+      
+      <div className="space-y-8">
+        {/* Existing messages */}
+        <div className="space-y-4">
+          {messages.map((message, index) => (
+            <MessagePanel 
+              key={`${message.timestamp}-${index}`}
+              message={message}
+            />
+          ))}
+        </div>
+
+        {/* Feedback form */}
+        <div className="mt-8">
+          <FeedbackForm
+            sessionId="test-session"
+            onSubmit={handleFeedbackSubmit}
           />
-        ))}
+        </div>
       </div>
     </div>
   );

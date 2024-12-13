@@ -40,7 +40,7 @@ export const ProblemInput = ({ onSubmit, isLoading = false }: ProblemInputProps)
           <textarea
             value={problem}
             onChange={(e) => setProblem(e.target.value)}
-            placeholder="Enter your graph theory problem (e.g., 'Prove that if G is a graph whose odd cycles pairwise intersect, then χ(G) ≤ 5.'). Feel free to enter latex."
+            placeholder="Enter your graph theory problem (e.g. 'Prove that if G is a graph whose odd cycles pairwise intersect, then χ(G) ≤ 5.'). Feel free to enter latex."
             rows={4}
             className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black"
           />

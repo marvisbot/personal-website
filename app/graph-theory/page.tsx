@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { ProblemInput } from '@/components/graph-theory/ProblemInput';
 import { MessagePanel } from '@/components/graph-theory/MessagePanel';
-import { Session, CreateSessionRequest } from '@/types/graph-theory';
+import { FeedbackForm } from '@/components/graph-theory/FeedbackForm';
+import { Session, CreateSessionRequest, Feedback } from '@/types/graph-theory';
 
 export default function GraphTheoryPage() {
   const [session, setSession] = useState<Session | null>(null);
@@ -82,13 +83,37 @@ export default function GraphTheoryPage() {
     }
   };
 
+  const handleFeedbackSubmit = async (feedback: Feedback) => {
+    try {
+      const response = await fetch(`/api/graph-theory/session/${session?.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          feedback,
+          status: 'feedback-submitted'
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to submit feedback');
+      }
+
+      const updatedSession = await response.json();
+      setSession(updatedSession.session);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to submit feedback');
+    }
+  };
+
   return (
     <main className="container mx-auto py-8 px-4">
       <h1 className="text-3xl font-bold text-center mb-8 text-black">
         What do you want to prove today?
       </h1>
 
-     {!session && (
+      {!session && (
         <div className="mb-8">
           <ProblemInput onSubmit={handleCreateSession} isLoading={isLoading} />
         </div>
@@ -125,6 +150,32 @@ export default function GraphTheoryPage() {
                 <div className="h-2 w-2 bg-gray-400 rounded-full"></div>
                 <div className="h-2 w-2 bg-gray-400 rounded-full"></div>
                 <div className="h-2 w-2 bg-gray-400 rounded-full"></div>
+              </div>
+            </div>
+          )}
+
+          {/* Feedback Form */}
+          {session.status === 'proof-completed' && !session.feedback && (
+            <div className="mt-8">
+              <FeedbackForm
+                sessionId={session.id}
+                onSubmit={handleFeedbackSubmit}
+                isSubmitting={isLoading}
+              />
+            </div>
+          )}
+
+          {/* Show submitted feedback */}
+          {session.feedback && (
+            <div className="mt-8 bg-green-50 border border-green-200 rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-green-800 mb-2">
+                Feedback Submitted
+              </h3>
+              <div className="text-green-700">
+                <p>Score: {session.feedback.score}/4</p>
+                {session.feedback.notes && (
+                  <p className="mt-2">Notes: {session.feedback.notes}</p>
+                )}
               </div>
             </div>
           )}
